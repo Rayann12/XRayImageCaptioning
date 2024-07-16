@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-tay Image Captioning</title>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 20px;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50vh;
+        }
+
+        .form-holder {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 0.3rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            margin-right: 20px;
+            position: relative;
+            max-width: 350px;
+            /* Adjust as needed */
+            width: 100%;
+        }
+
+        .spinner-border {
+            display: none;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 800px;
+            /* Adjust as needed */
+            overflow-x: auto;
+        }
+
+        .modal {
+            z-index: 9999;
+            max-width: 600px;
+            /* Adjust as needed */
+            margin: 0 auto;
+        }
+
+        .modal-body {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="d-block container" style="display:block;">
+        <div class="form-body">
+            <div class="row">
+                <div class="col-md-6 offset-md-4">
+                    <div class="form-holder">
+                        <div class="form-content">
+                            <div class="form-items">
+                                <h3>Upload an X-ray Image</h3>
+                                <p>Please upload an X-ray image file and wait a minute for the caption to be generated.
+                                </p>
+                                <form id="uploadForm" class="needs-validation" novalidate enctype="multipart/form-data">
+                                    <div class="form-group mt-3 mb-3">
+                                        <input type="file" class="form-control-file" id="image1" name="image1"
+                                            accept="image/*" required>
+                                        <div class="invalid-feedback">Please select an image for Image 1.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary mb-3">Upload and Generate
+                                            Caption</button>
+                                        <div class="spinner-border text-primary mt-5" role="status" id="first">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="mb-3">
+                                    <button class="btn btn-primary mb-3" onclick="generateRandom()" type="submit">
+                                        Generate captions for a batch
+                                    </button>
+                                    <div class="spinner-border text-primary mt-5" role="status" id="second">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-block container mt-5 table-container">
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-bordered" id="randomTable">
+                    <thead>
+                        <tr>
+                            <th>X-ray Image</th>
+                            <th>Caption</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="modal1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Caption</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show modal with response content when form is submitted
+        document.querySelector('#uploadForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            // Show loading spinner
+            document.querySelector('#first').style.display = 'inline-block';
+
+            var formData = new FormData(this);
+
+            await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading spinner
+                    document.querySelector('#first').style.display = 'none';
+                    // Get the table body
+                    const tableBody = document.querySelector('#randomTable tbody');
+
+                    // Create a new row
+                    const newRow = tableBody.insertRow();
+
+                    // Create cells for the new row
+                    const imageCell = newRow.insertCell();
+                    const captionCell = newRow.insertCell();
+
+                    // Create an image element
+                    const image = document.createElement('img');
+                    let path = data.path.replace(/^.*[\\/]/, '/');
+                    image.src = path; // Assuming the response contains the path to the uploaded image
+                    image.alt = 'Uploaded Image';
+                    image.classList.add('img-thumbnail');
+
+                    // Add the image to the image cell
+                    imageCell.appendChild(image);
+
+                    // Add the caption to the caption cell
+                    captionCell.textContent = data.result[0]; // Assuming the response contains the caption
+
+                    // Append the new row to the table body
+                    tableBody.appendChild(newRow);
+                    document.querySelector('#modalContent').textContent = data.result;
+                    document.querySelector('.modal').style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // Close modal when close button is clicked
+        document.querySelector('.close').addEventListener('click', function () {
+            document.querySelector('#modal1').style.display = 'none';
+        });
+
+        function generateRandom() {
+            document.querySelector('#second').style.display = 'inline-block';
+            fetch('/', {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading spinner
+                    document.querySelector('#second').style.display = 'none';
+
+                    // Populate the table with image paths and captions
+                    const tableBody = document.querySelector('#randomTable tbody');
+                    tableBody.innerHTML = ''; // Clear existing rows
+                    var paths = [
+                        "/image1-1713257462038.png",
+                        "/image1-1713257760595.png",
+                        "/image1-1713258983798.png",
+                        "/image1-1713259838683.png",
+                        "/image1-1713260002429.png",
+                        "/image1-1713264360872.png",
+                        "/image1-1713264546023.png",
+                        "/image1-1713703567927.png",
+                        // "/image1-1713703631741.png",
+                        // "/image1-1713703809150.png",
+                        // "/image1-1713703819011.png",
+                        // "/image1-1713704008214.png",
+                        // "/image1-1713704533205.png",
+                        // "/image1-1713704541676.png"
+                    ];
+                    for (let i = 0; i < data.result.length; i++) {
+                        const row = document.createElement('tr');
+                        const imageCell = document.createElement('td');
+                        const captionCell = document.createElement('td');
+                        const imagePath = paths[i];
+                        const caption = data.result[i];
+
+                        const image = document.createElement('img');
+                        image.src = imagePath;
+                        image.alt = 'Image';
+                        image.classList.add('img-thumbnail');
+
+                        imageCell.appendChild(image);
+                        captionCell.textContent = caption;
+
+                        row.appendChild(imageCell);
+                        row.appendChild(captionCell);
+
+                        tableBody.appendChild(row);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+
+</html>

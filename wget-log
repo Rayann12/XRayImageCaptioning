@@ -1,0 +1,11 @@
+--2024-03-16 17:17:23--  https://docs.google.com/spreadsheets/d/1cxvFYOkCnV0crTGaABLGUGJAUNpNKK3U/edit?usp=sharing
+Resolving docs.google.com (docs.google.com)... 142.250.182.14, 216.239.32.10, 216.239.34.10, ...
+Connecting to docs.google.com (docs.google.com)|142.250.182.14|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘edit?usp=sharing’
+
+edit?usp=sharing                   [<=>                                                 ]       0  --.-KB/s               edit?usp=sharing                   [ <=>                                                ] 244.24K   885KB/s               edit?usp=sharing                   [  <=>                                               ] 246.99K   890KB/s    in 0.3s    
+
+2024-03-16 17:17:24 (890 KB/s) - ‘edit?usp=sharing’ saved [252920]
+
